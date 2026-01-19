@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ProfileViewSet, ServiceViewSet, TimelineViewSet, SkillViewSet,
     ProjectCategoryViewSet, ProjectViewSet, TestimonialViewSet,
-    ClientViewSet, BlogPostViewSet, ContactMessageCreateView
+    ClientViewSet, BlogPostViewSet, ContactMessageCreateView,
+    PortfolioHomeView
 )
 
 router = DefaultRouter()
@@ -18,6 +19,10 @@ router.register(r'clients', ClientViewSet, basename='client')
 router.register(r'blog', BlogPostViewSet, basename='blog')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('contact/', ContactMessageCreateView.as_view(), name='contact'),
+    # Frontend template
+    path('home/', PortfolioHomeView.as_view(), name='portfolio_home'),
+
+    # API endpoints
+    path('api/', include(router.urls)),
+    path('api/contact/', ContactMessageCreateView.as_view(), name='contact'),
 ]

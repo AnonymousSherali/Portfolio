@@ -1,7 +1,8 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.views.generic import TemplateView
 
 from .models import (
     Profile, Service, TimelineEntry, Skill,
@@ -178,3 +179,11 @@ class ContactMessageCreateView(generics.CreateAPIView):
             {"message": "Thank you! Your message has been sent successfully."},
             status=status.HTTP_201_CREATED
         )
+
+
+class PortfolioHomeView(TemplateView):
+    """
+    Frontend portfolio template view.
+    Renders the main portfolio HTML page with Django static files.
+    """
+    template_name = 'portfolio/index.html'
