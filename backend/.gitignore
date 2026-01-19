@@ -17,9 +17,10 @@ db.sqlite3-journal
 # Media files (uncomment if you want to ignore uploaded media)
 # media/
 
-# Static files
+# Static files (collected static, not source static)
 staticfiles/
-static/
+# Don't ignore portfolio app static files
+!portfolio/static/
 
 # Virtual Environment
 venv/
