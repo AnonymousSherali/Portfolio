@@ -187,3 +187,38 @@ class PortfolioHomeView(TemplateView):
     Renders the main portfolio HTML page with Django static files.
     """
     template_name = 'portfolio/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get profile data
+        context['profile'] = Profile.objects.first()
+
+        # Get services
+        context['services'] = Service.objects.filter(is_active=True)
+
+        # Get timeline entries
+        context['education'] = TimelineEntry.objects.filter(
+            type='education', is_active=True
+        )
+        context['experience'] = TimelineEntry.objects.filter(
+            type='experience', is_active=True
+        )
+
+        # Get skills
+        context['skills'] = Skill.objects.filter(is_active=True)
+
+        # Get project categories and projects
+        context['categories'] = ProjectCategory.objects.all()
+        context['projects'] = Project.objects.filter(is_active=True)
+
+        # Get testimonials
+        context['testimonials'] = Testimonial.objects.filter(is_active=True)
+
+        # Get clients
+        context['clients'] = Client.objects.filter(is_active=True)
+
+        # Get blog posts
+        context['blog_posts'] = BlogPost.objects.filter(is_published=True)[:6]
+
+        return context
