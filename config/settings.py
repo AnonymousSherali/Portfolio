@@ -134,6 +134,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5500",
     "http://127.0.0.1:5500",
 ]
+CSRF_TRUSTED_ORIGINS = [
+    'https://portfolio-production-f3aa.up.railway.app',
+]
+ALLOWED_HOSTS = [
+    'portfolio-production-f3aa.up.railway.app',
+    '.railway.app',
+]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 
