@@ -46,16 +46,16 @@
         <div class="sidebar-info">
           <figure class="avatar-box">
             <img
-              src="{% static 'portfolio/images/my-avatar.png' %}"
-              alt="Sherali Toshniyozov"
+              src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}{% static 'portfolio/images/my-avatar.png' %}{% endif %}"
+              alt="{{ profile.name|default:'Sherali Toshniyozov' }}"
               width="80"
             />
           </figure>
 
           <div class="info-content">
-            <h1 class="name" title="Sherali Toshniyozov">Sherali Toshniyozov</h1>
+            <h1 class="name" title="{{ profile.name|default:'Sherali Toshniyozov' }}">{{ profile.name|default:'Sherali Toshniyozov' }}</h1>
 
-            <p class="title">Web developer</p>
+            <p class="title">{{ profile.title|default:'Web developer' }}</p>
           </div>
 
           <button class="info_more-btn" data-sidebar-btn>
@@ -69,6 +69,7 @@
           <div class="separator"></div>
 
           <ul class="contacts-list">
+            {% if profile.email %}
             <li class="contact-item">
               <div class="icon-box">
                 <ion-icon name="mail-outline"></ion-icon>
@@ -77,12 +78,14 @@
               <div class="contact-info">
                 <p class="contact-title">Email</p>
 
-                <a href="mailto:richard@example.com" class="contact-link"
-                  >richard@example.com</a
+                <a href="mailto:{{ profile.email }}" class="contact-link"
+                  >{{ profile.email }}</a
                 >
               </div>
             </li>
+            {% endif %}
 
+            {% if profile.phone %}
             <li class="contact-item">
               <div class="icon-box">
                 <ion-icon name="phone-portrait-outline"></ion-icon>
@@ -91,12 +94,14 @@
               <div class="contact-info">
                 <p class="contact-title">Phone</p>
 
-                <a href="tel:+12133522795" class="contact-link"
-                  >+1 (213) 352-2795</a
+                <a href="tel:{{ profile.phone }}" class="contact-link"
+                  >{{ profile.phone }}</a
                 >
               </div>
             </li>
+            {% endif %}
 
+            {% if profile.birthday %}
             <li class="contact-item">
               <div class="icon-box">
                 <ion-icon name="calendar-outline"></ion-icon>
@@ -105,10 +110,12 @@
               <div class="contact-info">
                 <p class="contact-title">Birthday</p>
 
-                <time datetime="1982-06-23">June 23, 1982</time>
+                <time datetime="{{ profile.birthday|date:'Y-m-d' }}">{{ profile.birthday|date:'F d, Y' }}</time>
               </div>
             </li>
+            {% endif %}
 
+            {% if profile.location %}
             <li class="contact-item">
               <div class="icon-box">
                 <ion-icon name="location-outline"></ion-icon>
@@ -117,31 +124,54 @@
               <div class="contact-info">
                 <p class="contact-title">Location</p>
 
-                <address>Sacramento, California, USA</address>
+                <address>{{ profile.location }}</address>
               </div>
             </li>
+            {% endif %}
           </ul>
 
           <div class="separator"></div>
 
           <ul class="social-list">
+            {% if profile.facebook_url %}
             <li class="social-item">
-              <a href="#" class="social-link">
+              <a href="{{ profile.facebook_url }}" class="social-link" target="_blank">
                 <ion-icon name="logo-facebook"></ion-icon>
               </a>
             </li>
+            {% endif %}
 
+            {% if profile.twitter_url %}
             <li class="social-item">
-              <a href="#" class="social-link">
+              <a href="{{ profile.twitter_url }}" class="social-link" target="_blank">
                 <ion-icon name="logo-twitter"></ion-icon>
               </a>
             </li>
+            {% endif %}
 
+            {% if profile.instagram_url %}
             <li class="social-item">
-              <a href="#" class="social-link">
+              <a href="{{ profile.instagram_url }}" class="social-link" target="_blank">
                 <ion-icon name="logo-instagram"></ion-icon>
               </a>
             </li>
+            {% endif %}
+
+            {% if profile.linkedin_url %}
+            <li class="social-item">
+              <a href="{{ profile.linkedin_url }}" class="social-link" target="_blank">
+                <ion-icon name="logo-linkedin"></ion-icon>
+              </a>
+            </li>
+            {% endif %}
+
+            {% if profile.github_url %}
+            <li class="social-item">
+              <a href="{{ profile.github_url }}" class="social-link" target="_blank">
+                <ion-icon name="logo-github"></ion-icon>
+              </a>
+            </li>
+            {% endif %}
           </ul>
         </div>
       </aside>
@@ -189,6 +219,9 @@
           </header>
 
           <section class="about-text">
+            {% if profile.bio %}
+              {{ profile.bio|linebreaks }}
+            {% else %}
             <p>
               I'm Creative Director and UI/UX Designer from Sydney, Australia,
               working in web development and print media. I enjoy turning
@@ -203,6 +236,7 @@
               identity in the most creative way. I created web design for many
               famous brand companies.
             </p>
+            {% endif %}
           </section>
 
           <!--
@@ -213,6 +247,25 @@
             <h3 class="h3 service-title">What i'm doing</h3>
 
             <ul class="service-list">
+              {% for service in services %}
+              <li class="service-item">
+                <div class="service-icon-box">
+                  <img
+                    src="{% if service.icon %}{{ service.icon.url }}{% else %}{% static 'portfolio/images/icon-design.svg' %}{% endif %}"
+                    alt="{{ service.name }} icon"
+                    width="40"
+                  />
+                </div>
+
+                <div class="service-content-box">
+                  <h4 class="h4 service-item-title">{{ service.name }}</h4>
+
+                  <p class="service-item-text">
+                    {{ service.description }}
+                  </p>
+                </div>
+              </li>
+              {% empty %}
               <li class="service-item">
                 <div class="service-icon-box">
                   <img
@@ -231,62 +284,7 @@
                   </p>
                 </div>
               </li>
-
-              <li class="service-item">
-                <div class="service-icon-box">
-                  <img
-                    src="{% static 'portfolio/images/icon-dev.svg' %}"
-                    alt="Web development icon"
-                    width="40"
-                  />
-                </div>
-
-                <div class="service-content-box">
-                  <h4 class="h4 service-item-title">Web development</h4>
-
-                  <p class="service-item-text">
-                    High-quality development of sites at the professional level.
-                  </p>
-                </div>
-              </li>
-
-              <li class="service-item">
-                <div class="service-icon-box">
-                  <img
-                    src="{% static 'portfolio/images/icon-app.svg' %}"
-                    alt="mobile app icon"
-                    width="40"
-                  />
-                </div>
-
-                <div class="service-content-box">
-                  <h4 class="h4 service-item-title">Mobile apps</h4>
-
-                  <p class="service-item-text">
-                    Professional development of applications for iOS and
-                    Android.
-                  </p>
-                </div>
-              </li>
-
-              <li class="service-item">
-                <div class="service-icon-box">
-                  <img
-                    src="{% static 'portfolio/images/icon-photo.svg' %}"
-                    alt="camera icon"
-                    width="40"
-                  />
-                </div>
-
-                <div class="service-content-box">
-                  <h4 class="h4 service-item-title">Photography</h4>
-
-                  <p class="service-item-text">
-                    I make high-quality photos of any category at a professional
-                    level.
-                  </p>
-                </div>
-              </li>
+              {% endfor %}
             </ul>
           </section>
 
@@ -298,12 +296,13 @@
             <h3 class="h3 testimonials-title">Testimonials</h3>
 
             <ul class="testimonials-list has-scrollbar">
+              {% for testimonial in testimonials %}
               <li class="testimonials-item">
                 <div class="content-card" data-testimonials-item>
                   <figure class="testimonials-avatar-box">
                     <img
-                      src="{% static 'portfolio/images/avatar-1.png' %}"
-                      alt="Daniel lewis"
+                      src="{{ testimonial.client_avatar.url }}"
+                      alt="{{ testimonial.client_name }}"
                       width="60"
                       data-testimonials-avatar
                     />
@@ -313,114 +312,17 @@
                     class="h4 testimonials-item-title"
                     data-testimonials-title
                   >
-                    Daniel lewis
+                    {{ testimonial.client_name }}
                   </h4>
 
                   <div class="testimonials-text" data-testimonials-text>
                     <p>
-                      Richard was hired to create a corporate identity. We were
-                      very pleased with the work done. She has a lot of
-                      experience and is very concerned about the needs of
-                      client. Lorem ipsum dolor sit amet, ullamcous cididt
-                      consectetur adipiscing elit, seds do et eiusmod tempor
-                      incididunt ut laborels dolore magnarels alia.
+                      {{ testimonial.content }}
                     </p>
                   </div>
                 </div>
               </li>
-
-              <li class="testimonials-item">
-                <div class="content-card" data-testimonials-item>
-                  <figure class="testimonials-avatar-box">
-                    <img
-                      src="{% static 'portfolio/images/avatar-2.png' %}"
-                      alt="Jessica miller"
-                      width="60"
-                      data-testimonials-avatar
-                    />
-                  </figure>
-
-                  <h4
-                    class="h4 testimonials-item-title"
-                    data-testimonials-title
-                  >
-                    Jessica miller
-                  </h4>
-
-                  <div class="testimonials-text" data-testimonials-text>
-                    <p>
-                      Richard was hired to create a corporate identity. We were
-                      very pleased with the work done. She has a lot of
-                      experience and is very concerned about the needs of
-                      client. Lorem ipsum dolor sit amet, ullamcous cididt
-                      consectetur adipiscing elit, seds do et eiusmod tempor
-                      incididunt ut laborels dolore magnarels alia.
-                    </p>
-                  </div>
-                </div>
-              </li>
-
-              <li class="testimonials-item">
-                <div class="content-card" data-testimonials-item>
-                  <figure class="testimonials-avatar-box">
-                    <img
-                      src="{% static 'portfolio/images/avatar-3.png' %}"
-                      alt="Emily evans"
-                      width="60"
-                      data-testimonials-avatar
-                    />
-                  </figure>
-
-                  <h4
-                    class="h4 testimonials-item-title"
-                    data-testimonials-title
-                  >
-                    Emily evans
-                  </h4>
-
-                  <div class="testimonials-text" data-testimonials-text>
-                    <p>
-                      Richard was hired to create a corporate identity. We were
-                      very pleased with the work done. She has a lot of
-                      experience and is very concerned about the needs of
-                      client. Lorem ipsum dolor sit amet, ullamcous cididt
-                      consectetur adipiscing elit, seds do et eiusmod tempor
-                      incididunt ut laborels dolore magnarels alia.
-                    </p>
-                  </div>
-                </div>
-              </li>
-
-              <li class="testimonials-item">
-                <div class="content-card" data-testimonials-item>
-                  <figure class="testimonials-avatar-box">
-                    <img
-                      src="{% static 'portfolio/images/avatar-4.png' %}"
-                      alt="Henry william"
-                      width="60"
-                      data-testimonials-avatar
-                    />
-                  </figure>
-
-                  <h4
-                    class="h4 testimonials-item-title"
-                    data-testimonials-title
-                  >
-                    Henry william
-                  </h4>
-
-                  <div class="testimonials-text" data-testimonials-text>
-                    <p>
-                      Richard was hired to create a corporate identity. We were
-                      very pleased with the work done. She has a lot of
-                      experience and is very concerned about the needs of
-                      client. Lorem ipsum dolor sit amet, ullamcous cididt
-                      consectetur adipiscing elit, seds do et eiusmod tempor
-                      incididunt ut laborels dolore magnarels alia.
-                    </p>
-                  </div>
-                </div>
-              </li>
+              {% endfor %}
             </ul>
           </section>
 
@@ -479,59 +381,16 @@
             <h3 class="h3 clients-title">Clients</h3>
 
             <ul class="clients-list has-scrollbar">
+              {% for client in clients %}
               <li class="clients-item">
-                <a href="#">
+                <a href="{% if client.website %}{{ client.website }}{% else %}#{% endif %}" {% if client.website %}target="_blank"{% endif %}>
                   <img
-                    src="{% static 'portfolio/images/logo-1-color.png' %}"
-                    alt="client logo"
+                    src="{{ client.logo.url }}"
+                    alt="{{ client.name }} logo"
                   />
                 </a>
               </li>
-
-              <li class="clients-item">
-                <a href="#">
-                  <img
-                    src="{% static 'portfolio/images/logo-2-color.png' %}"
-                    alt="client logo"
-                  />
-                </a>
-              </li>
-
-              <li class="clients-item">
-                <a href="#">
-                  <img
-                    src="{% static 'portfolio/images/logo-3-color.png' %}"
-                    alt="client logo"
-                  />
-                </a>
-              </li>
-
-              <li class="clients-item">
-                <a href="#">
-                  <img
-                    src="{% static 'portfolio/images/logo-4-color.png' %}"
-                    alt="client logo"
-                  />
-                </a>
-              </li>
-
-              <li class="clients-item">
-                <a href="#">
-                  <img
-                    src="{% static 'portfolio/images/logo-5-color.png' %}"
-                    alt="client logo"
-                  />
-                </a>
-              </li>
-
-              <li class="clients-item">
-                <a href="#">
-                  <img
-                    src="{% static 'portfolio/images/logo-6-color.png' %}"
-                    alt="client logo"
-                  />
-                </a>
-              </li>
+              {% endfor %}
             </ul>
           </section>
         </article>
@@ -555,44 +414,19 @@
             </div>
 
             <ol class="timeline-list">
+              {% for entry in education %}
               <li class="timeline-item">
                 <h4 class="h4 timeline-item-title">
-                  University school of the arts
+                  {{ entry.title }}
                 </h4>
 
-                <span>2007 — 2008</span>
+                <span>{{ entry.start_date|date:"Y" }} — {% if entry.end_date %}{{ entry.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
 
                 <p class="timeline-text">
-                  Nemo enims ipsam voluptatem, blanditiis praesentium voluptum
-                  delenit atque corrupti, quos dolores et quas molestias
-                  exceptur.
+                  {{ entry.description }}
                 </p>
               </li>
-
-              <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">New york academy of art</h4>
-
-                <span>2006 — 2007</span>
-
-                <p class="timeline-text">
-                  Ratione voluptatem sequi nesciunt, facere quisquams facere
-                  menda ossimus, omnis voluptas assumenda est omnis..
-                </p>
-              </li>
-
-              <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">
-                  High school of art and design
-                </h4>
-
-                <span>2002 — 2004</span>
-
-                <p class="timeline-text">
-                  Duis aute irure dolor in reprehenderit in voluptate, quila
-                  voluptas mag odit aut fugit, sed consequuntur magni dolores
-                  eos.
-                </p>
-              </li>
+              {% endfor %}
             </ol>
           </section>
 
@@ -606,41 +440,17 @@
             </div>
 
             <ol class="timeline-list">
+              {% for entry in experience %}
               <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">Creative director</h4>
+                <h4 class="h4 timeline-item-title">{{ entry.title }}</h4>
 
-                <span>2015 — Present</span>
+                <span>{{ entry.start_date|date:"Y" }} — {% if entry.end_date %}{{ entry.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
 
                 <p class="timeline-text">
-                  Nemo enim ipsam voluptatem blanditiis praesentium voluptum
-                  delenit atque corrupti, quos dolores et qvuas molestias
-                  exceptur.
+                  {{ entry.description }}
                 </p>
               </li>
-
-              <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">Art director</h4>
-
-                <span>2013 — 2015</span>
-
-                <p class="timeline-text">
-                  Nemo enims ipsam voluptatem, blanditiis praesentium voluptum
-                  delenit atque corrupti, quos dolores et quas molestias
-                  exceptur.
-                </p>
-              </li>
-
-              <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">Web designer</h4>
-
-                <span>2010 — 2013</span>
-
-                <p class="timeline-text">
-                  Nemo enims ipsam voluptatem, blanditiis praesentium voluptum
-                  delenit atque corrupti, quos dolores et quas molestias
-                  exceptur.
-                </p>
-              </li>
+              {% endfor %}
             </ol>
           </section>
 
@@ -648,49 +458,18 @@
             <h3 class="h3 skills-title">My skills</h3>
 
             <ul class="skills-list content-card">
+              {% for skill in skills %}
               <li class="skills-item">
                 <div class="title-wrapper">
-                  <h5 class="h5">Web design</h5>
-                  <data value="80">80%</data>
+                  <h5 class="h5">{{ skill.name }}</h5>
+                  <data value="{{ skill.proficiency }}">{{ skill.proficiency }}%</data>
                 </div>
 
                 <div class="skill-progress-bg">
-                  <div class="skill-progress-fill" style="width: 80%"></div>
+                  <div class="skill-progress-fill" style="width: {{ skill.proficiency }}%"></div>
                 </div>
               </li>
-
-              <li class="skills-item">
-                <div class="title-wrapper">
-                  <h5 class="h5">Graphic design</h5>
-                  <data value="70">70%</data>
-                </div>
-
-                <div class="skill-progress-bg">
-                  <div class="skill-progress-fill" style="width: 70%"></div>
-                </div>
-              </li>
-
-              <li class="skills-item">
-                <div class="title-wrapper">
-                  <h5 class="h5">Branding</h5>
-                  <data value="90">90%</data>
-                </div>
-
-                <div class="skill-progress-bg">
-                  <div class="skill-progress-fill" style="width: 90%"></div>
-                </div>
-              </li>
-
-              <li class="skills-item">
-                <div class="title-wrapper">
-                  <h5 class="h5">WordPress</h5>
-                  <data value="50">50%</data>
-                </div>
-
-                <div class="skill-progress-bg">
-                  <div class="skill-progress-fill" style="width: 50%"></div>
-                </div>
-              </li>
+              {% endfor %}
             </ul>
           </section>
         </article>
@@ -710,17 +489,11 @@
                 <button class="active" data-filter-btn>All</button>
               </li>
 
+              {% for category in categories %}
               <li class="filter-item">
-                <button data-filter-btn>Web design</button>
+                <button data-filter-btn>{{ category.name }}</button>
               </li>
-
-              <li class="filter-item">
-                <button data-filter-btn>Applications</button>
-              </li>
-
-              <li class="filter-item">
-                <button data-filter-btn>Web development</button>
-              </li>
+              {% endfor %}
             </ul>
 
             <div class="filter-select-box">
@@ -739,236 +512,40 @@
                   <button data-select-item>All</button>
                 </li>
 
+                {% for category in categories %}
                 <li class="select-item">
-                  <button data-select-item>Web design</button>
+                  <button data-select-item>{{ category.name }}</button>
                 </li>
-
-                <li class="select-item">
-                  <button data-select-item>Applications</button>
-                </li>
-
-                <li class="select-item">
-                  <button data-select-item>Web development</button>
-                </li>
+                {% endfor %}
               </ul>
             </div>
 
             <ul class="project-list">
+              {% for project in projects %}
               <li
                 class="project-item active"
                 data-filter-item
-                data-category="web development"
+                data-category="{{ project.category.name|lower }}"
               >
-                <a href="#">
+                <a href="{% if project.link %}{{ project.link }}{% else %}#{% endif %}" {% if project.link %}target="_blank"{% endif %}>
                   <figure class="project-img">
                     <div class="project-item-icon-box">
                       <ion-icon name="eye-outline"></ion-icon>
                     </div>
 
                     <img
-                      src="{% static 'portfolio/images/project-1.jpg' %}"
-                      alt="finance"
+                      src="{{ project.image.url }}"
+                      alt="{{ project.title }}"
                       loading="lazy"
                     />
                   </figure>
 
-                  <h3 class="project-title">Finance</h3>
+                  <h3 class="project-title">{{ project.title }}</h3>
 
-                  <p class="project-category">Web development</p>
+                  <p class="project-category">{{ project.category.name }}</p>
                 </a>
               </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web development"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-2.png' %}"
-                      alt="orizon"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Orizon</h3>
-
-                  <p class="project-category">Web development</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web design"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-3.jpg' %}"
-                      alt="fundo"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Fundo</h3>
-
-                  <p class="project-category">Web design</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="applications"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-4.png' %}"
-                      alt="brawlhalla"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Brawlhalla</h3>
-
-                  <p class="project-category">Applications</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web design"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-5.png' %}"
-                      alt="dsm."
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">DSM.</h3>
-
-                  <p class="project-category">Web design</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web design"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-6.png' %}"
-                      alt="metaspark"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">MetaSpark</h3>
-
-                  <p class="project-category">Web design</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web development"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-7.png' %}"
-                      alt="summary"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Summary</h3>
-
-                  <p class="project-category">Web development</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="applications"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-8.jpg' %}"
-                      alt="task manager"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Task Manager</h3>
-
-                  <p class="project-category">Applications</p>
-                </a>
-              </li>
-
-              <li
-                class="project-item active"
-                data-filter-item
-                data-category="web development"
-              >
-                <a href="#">
-                  <figure class="project-img">
-                    <div class="project-item-icon-box">
-                      <ion-icon name="eye-outline"></ion-icon>
-                    </div>
-
-                    <img
-                      src="{% static 'portfolio/images/project-9.png' %}"
-                      alt="arrival"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <h3 class="project-title">Arrival</h3>
-
-                  <p class="project-category">Web development</p>
-                </a>
-              </li>
+              {% endfor %}
             </ul>
           </section>
         </article>
@@ -984,187 +561,37 @@
 
           <section class="blog-posts">
             <ul class="blog-posts-list">
+              {% for blog_post in blog_posts %}
               <li class="blog-post-item">
                 <a href="#">
                   <figure class="blog-banner-box">
                     <img
-                      src="{% static 'portfolio/images/blog-1.jpg' %}"
-                      alt="Design conferences in 2022"
+                      src="{{ blog_post.featured_image.url }}"
+                      alt="{{ blog_post.title }}"
                       loading="lazy"
                     />
                   </figure>
 
                   <div class="blog-content">
                     <div class="blog-meta">
-                      <p class="blog-category">Design</p>
+                      <p class="blog-category">{{ blog_post.category }}</p>
 
                       <span class="dot"></span>
 
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
+                      <time datetime="{{ blog_post.published_date|date:'Y-m-d' }}">{{ blog_post.published_date|date:'M d, Y' }}</time>
                     </div>
 
                     <h3 class="h3 blog-item-title">
-                      Design conferences in 2022
+                      {{ blog_post.title }}
                     </h3>
 
                     <p class="blog-text">
-                      Veritatis et quasi architecto beatae vitae dicta sunt,
-                      explicabo.
+                      {{ blog_post.excerpt|truncatewords:15 }}
                     </p>
                   </div>
                 </a>
               </li>
-
-              <li class="blog-post-item">
-                <a href="#">
-                  <figure class="blog-banner-box">
-                    <img
-                      src="{% static 'portfolio/images/blog-2.jpg' %}"
-                      alt="Best fonts every designer"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <div class="blog-content">
-                    <div class="blog-meta">
-                      <p class="blog-category">Design</p>
-
-                      <span class="dot"></span>
-
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
-                    </div>
-
-                    <h3 class="h3 blog-item-title">
-                      Best fonts every designer
-                    </h3>
-
-                    <p class="blog-text">
-                      Sed ut perspiciatis, nam libero tempore, cum soluta nobis
-                      est eligendi.
-                    </p>
-                  </div>
-                </a>
-              </li>
-
-              <li class="blog-post-item">
-                <a href="#">
-                  <figure class="blog-banner-box">
-                    <img
-                      src="{% static 'portfolio/images/blog-3.jpg' %}"
-                      alt="Design digest #80"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <div class="blog-content">
-                    <div class="blog-meta">
-                      <p class="blog-category">Design</p>
-
-                      <span class="dot"></span>
-
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
-                    </div>
-
-                    <h3 class="h3 blog-item-title">Design digest #80</h3>
-
-                    <p class="blog-text">
-                      Excepteur sint occaecat cupidatat no proident, quis
-                      nostrum exercitationem ullam corporis suscipit.
-                    </p>
-                  </div>
-                </a>
-              </li>
-
-              <li class="blog-post-item">
-                <a href="#">
-                  <figure class="blog-banner-box">
-                    <img
-                      src="{% static 'portfolio/images/blog-4.jpg' %}"
-                      alt="UI interactions of the week"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <div class="blog-content">
-                    <div class="blog-meta">
-                      <p class="blog-category">Design</p>
-
-                      <span class="dot"></span>
-
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
-                    </div>
-
-                    <h3 class="h3 blog-item-title">
-                      UI interactions of the week
-                    </h3>
-
-                    <p class="blog-text">
-                      Enim ad minim veniam, consectetur adipiscing elit, quis
-                      nostrud exercitation ullamco laboris nisi.
-                    </p>
-                  </div>
-                </a>
-              </li>
-
-              <li class="blog-post-item">
-                <a href="#">
-                  <figure class="blog-banner-box">
-                    <img
-                      src="{% static 'portfolio/images/blog-5.jpg' %}"
-                      alt="The forgotten art of spacing"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <div class="blog-content">
-                    <div class="blog-meta">
-                      <p class="blog-category">Design</p>
-
-                      <span class="dot"></span>
-
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
-                    </div>
-
-                    <h3 class="h3 blog-item-title">
-                      The forgotten art of spacing
-                    </h3>
-
-                    <p class="blog-text">
-                      Maxime placeat, sed do eiusmod tempor incididunt ut labore
-                      et dolore magna aliqua.
-                    </p>
-                  </div>
-                </a>
-              </li>
-
-              <li class="blog-post-item">
-                <a href="#">
-                  <figure class="blog-banner-box">
-                    <img
-                      src="{% static 'portfolio/images/blog-6.jpg' %}"
-                      alt="Design digest #79"
-                      loading="lazy"
-                    />
-                  </figure>
-
-                  <div class="blog-content">
-                    <div class="blog-meta">
-                      <p class="blog-category">Design</p>
-
-                      <span class="dot"></span>
-
-                      <time datetime="2022-02-23">Fab 23, 2022</time>
-                    </div>
-
-                    <h3 class="h3 blog-item-title">Design digest #79</h3>
-
-                    <p class="blog-text">
-                      Optio cumque nihil impedit uo minus quod maxime placeat,
-                      velit esse cillum.
-                    </p>
-                  </div>
-                </a>
-              </li>
+              {% endfor %}
             </ul>
           </section>
         </article>
@@ -1192,11 +619,12 @@
           <section class="contact-form">
             <h3 class="h3 form-title">Contact Form</h3>
 
-            <form action="#" class="form" data-form>
+            <form action="{% url 'contact' %}" method="POST" class="form" data-form id="contact-form">
+              {% csrf_token %}
               <div class="input-wrapper">
                 <input
                   type="text"
-                  name="fullname"
+                  name="full_name"
                   class="form-input"
                   placeholder="Full name"
                   required
@@ -1226,6 +654,7 @@
                 <span>Send Message</span>
               </button>
             </form>
+            <div id="form-message" style="margin-top: 1rem; display: none;"></div>
           </section>
         </article>
       </div>
@@ -1235,6 +664,61 @@
     - custom js link
   -->
     <script src="{% static 'portfolio/js/script.js' %}"></script>
+
+    <!--
+    - contact form submission handler
+  -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const contactForm = document.getElementById('contact-form');
+        const formMessage = document.getElementById('form-message');
+
+        if (contactForm) {
+          contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(contactForm);
+            const submitBtn = contactForm.querySelector('[data-form-btn]');
+            const btnText = submitBtn.querySelector('span');
+            const originalText = btnText.textContent;
+
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Sending...';
+
+            fetch(contactForm.action, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              formMessage.style.display = 'block';
+              formMessage.style.color = '#4CAF50';
+              formMessage.textContent = data.message || 'Thank you! Your message has been sent successfully.';
+              contactForm.reset();
+
+              // Hide message after 5 seconds
+              setTimeout(() => {
+                formMessage.style.display = 'none';
+              }, 5000);
+            })
+            .catch(error => {
+              formMessage.style.display = 'block';
+              formMessage.style.color = '#f44336';
+              formMessage.textContent = 'Sorry, there was an error sending your message. Please try again.';
+              console.error('Error:', error);
+            })
+            .finally(() => {
+              submitBtn.disabled = false;
+              btnText.textContent = originalText;
+            });
+          });
+        }
+      });
+    </script>
 
     <!--
     - ionicon link
