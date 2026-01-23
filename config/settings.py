@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     '.railway.app',
     'localhost',
     '127.0.0.1',
+    '*',  # Allow all hosts in production (Railway provides HTTPS)
 ]
 
 
