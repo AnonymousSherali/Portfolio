@@ -15,13 +15,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    'portfolio-production-f3aa.up.railway.app',
-    '.railway.app',
-    'localhost',
-    '127.0.0.1',
-    '*',  # Allow all hosts in production (Railway provides HTTPS)
-]
+ALLOWED_HOSTS = ['*']  # Railway handles host validation
 
 
 # Application definition
@@ -144,20 +138,19 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS settings - Allow frontend to access backend
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "https://portfolio-production-f3aa.up.railway.app",
-]
+# CORS settings
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://portfolio-production-f3aa.up.railway.app",
+        "https://*.railway.app",
+    ]
 
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF settings
 CSRF_TRUSTED_ORIGINS = [
     'https://portfolio-production-f3aa.up.railway.app',
+    'https://*.railway.app',
 ]
-
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
-
-# Allow credentials
-CORS_ALLOW_CREDENTIALS = True
