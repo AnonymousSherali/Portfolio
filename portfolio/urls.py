@@ -6,6 +6,7 @@ from .views import (
     ClientViewSet, BlogPostViewSet, ContactMessageCreateView,
     PortfolioHomeView
 )
+from .healthcheck import HealthCheckView
 
 router = DefaultRouter()
 router.register(r'profile', ProfileViewSet, basename='profile')
@@ -19,6 +20,9 @@ router.register(r'clients', ClientViewSet, basename='client')
 router.register(r'blog', BlogPostViewSet, basename='blog')
 
 urlpatterns = [
+    # Healthcheck
+    path('health/', HealthCheckView.as_view(), name='healthcheck'),
+
     # Frontend template
     path('home/', PortfolioHomeView.as_view(), name='portfolio_home'),
 
