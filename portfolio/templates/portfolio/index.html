@@ -301,7 +301,7 @@
                 <div class="content-card" data-testimonials-item>
                   <figure class="testimonials-avatar-box">
                     <img
-                      src="{{ testimonial.client_avatar.url }}"
+                      src="{% if testimonial.client_avatar %}{{ testimonial.client_avatar.url }}{% else %}{% static 'portfolio/images/avatar-1.png' %}{% endif %}"
                       alt="{{ testimonial.client_name }}"
                       width="60"
                       data-testimonials-avatar
@@ -416,15 +416,10 @@
             <ol class="timeline-list">
               {% for entry in education %}
               <li class="timeline-item">
-                <h4 class="h4 timeline-item-title">
-                  {{ entry.title }}
-                </h4>
-
+                <h4 class="h4 timeline-item-title">{{ entry.title }}</h4>
+                <span>{{ entry.institution }}</span>
                 <span>{{ entry.start_date|date:"Y" }} — {% if entry.end_date %}{{ entry.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
-
-                <p class="timeline-text">
-                  {{ entry.description }}
-                </p>
+                <p class="timeline-text">{{ entry.description }}</p>
               </li>
               {% endfor %}
             </ol>
@@ -435,7 +430,6 @@
               <div class="icon-box">
                 <ion-icon name="book-outline"></ion-icon>
               </div>
-
               <h3 class="h3">Experience</h3>
             </div>
 
@@ -443,12 +437,9 @@
               {% for entry in experience %}
               <li class="timeline-item">
                 <h4 class="h4 timeline-item-title">{{ entry.title }}</h4>
-
+                <span>{{ entry.institution }}</span>
                 <span>{{ entry.start_date|date:"Y" }} — {% if entry.end_date %}{{ entry.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
-
-                <p class="timeline-text">
-                  {{ entry.description }}
-                </p>
+                <p class="timeline-text">{{ entry.description }}</p>
               </li>
               {% endfor %}
             </ol>
@@ -525,7 +516,7 @@
               <li
                 class="project-item active"
                 data-filter-item
-                data-category="{{ project.category.name|lower }}"
+                data-category="{% if project.category %}{{ project.category.name|lower }}{% else %}other{% endif %}"
               >
                 <a href="{% if project.link %}{{ project.link }}{% else %}#{% endif %}" {% if project.link %}target="_blank"{% endif %}>
                   <figure class="project-img">
@@ -533,16 +524,18 @@
                       <ion-icon name="eye-outline"></ion-icon>
                     </div>
 
+                    {% if project.image %}
                     <img
                       src="{{ project.image.url }}"
                       alt="{{ project.title }}"
                       loading="lazy"
                     />
+                    {% endif %}
                   </figure>
 
                   <h3 class="project-title">{{ project.title }}</h3>
 
-                  <p class="project-category">{{ project.category.name }}</p>
+                  <p class="project-category">{% if project.category %}{{ project.category.name }}{% else %}Other{% endif %}</p>
                 </a>
               </li>
               {% endfor %}
@@ -565,11 +558,13 @@
               <li class="blog-post-item">
                 <a href="#">
                   <figure class="blog-banner-box">
+                    {% if blog_post.featured_image %}
                     <img
                       src="{{ blog_post.featured_image.url }}"
                       alt="{{ blog_post.title }}"
                       loading="lazy"
                     />
+                    {% endif %}
                   </figure>
 
                   <div class="blog-content">
@@ -686,24 +681,28 @@
             submitBtn.disabled = true;
             btnText.textContent = 'Sending...';
 
+            const csrfToken = contactForm.querySelector('[name=csrfmiddlewaretoken]').value;
+
             fetch(contactForm.action, {
               method: 'POST',
               body: formData,
               headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken,
               }
             })
-            .then(response => response.json())
+            .then(response => {
+              if (!response.ok) {
+                return response.json().then(err => { throw err; });
+              }
+              return response.json();
+            })
             .then(data => {
               formMessage.style.display = 'block';
               formMessage.style.color = '#4CAF50';
               formMessage.textContent = data.message || 'Thank you! Your message has been sent successfully.';
               contactForm.reset();
-
-              // Hide message after 5 seconds
-              setTimeout(() => {
-                formMessage.style.display = 'none';
-              }, 5000);
+              setTimeout(() => { formMessage.style.display = 'none'; }, 5000);
             })
             .catch(error => {
               formMessage.style.display = 'block';
