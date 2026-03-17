@@ -133,7 +133,7 @@ class Project(models.Model):
     """Portfolio projects"""
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image = models.ImageField(upload_to='projects/')
+    image = models.ImageField(upload_to='projects/', blank=True, null=True)
     category = models.ForeignKey(
         ProjectCategory,
         on_delete=models.SET_NULL,
@@ -163,7 +163,7 @@ class Project(models.Model):
 class Testimonial(models.Model):
     """Client testimonials"""
     client_name = models.CharField(max_length=100)
-    client_avatar = models.ImageField(upload_to='testimonials/')
+    client_avatar = models.ImageField(upload_to='testimonials/', blank=True, null=True)
     content = models.TextField()
     date = models.DateField()
     order = models.IntegerField(default=0, help_text='Display order')
@@ -207,7 +207,7 @@ class BlogPost(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     content = models.TextField()
     excerpt = models.TextField(help_text='Short preview text')
-    featured_image = models.ImageField(upload_to='blog/')
+    featured_image = models.ImageField(upload_to='blog/', blank=True, null=True)
     category = models.CharField(max_length=100, default='Design')
     published_date = models.DateField()
     updated_date = models.DateField(auto_now=True)

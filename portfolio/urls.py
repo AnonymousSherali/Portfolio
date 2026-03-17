@@ -23,8 +23,8 @@ urlpatterns = [
     # Healthcheck
     path('health/', HealthCheckView.as_view(), name='healthcheck'),
 
-    # Frontend template
-    path('home/', PortfolioHomeView.as_view(), name='portfolio_home'),
+    # Frontend homepage
+    path('', PortfolioHomeView.as_view(), name='home'),
 
     # API endpoints
     path('api/', include(router.urls)),
