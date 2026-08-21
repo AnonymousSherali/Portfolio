@@ -4,7 +4,7 @@ from .views import (
     ProfileViewSet, ServiceViewSet, TimelineViewSet, SkillViewSet,
     ProjectCategoryViewSet, ProjectViewSet, TestimonialViewSet,
     ClientViewSet, BlogPostViewSet, ContactMessageCreateView,
-    PortfolioHomeView
+    PortfolioHomeView, BlogPostDetailView
 )
 from .healthcheck import HealthCheckView
 
@@ -23,8 +23,9 @@ urlpatterns = [
     # Healthcheck
     path('health/', HealthCheckView.as_view(), name='healthcheck'),
 
-    # Frontend homepage
+    # Frontend pages
     path('', PortfolioHomeView.as_view(), name='home'),
+    path('blog/<slug:slug>/', BlogPostDetailView.as_view(), name='blog_detail'),
 
     # API endpoints
     path('api/', include(router.urls)),

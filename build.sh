@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Railway build script
+# Railway build script.
+#
+# Only build-time work belongs here. Migrations and superuser creation run at
+# start-up instead (see release.sh) because the build image is discarded and
+# the database lives in a separate service.
 
-set -e  # Exit on error
-
-echo "====== Running migrations ======"
-python manage.py migrate --noinput
-
-echo "====== Creating superuser ======"
-python manage.py create_default_superuser
+set -e
 
 echo "====== Collecting static files ======"
 python manage.py collectstatic --noinput --clear

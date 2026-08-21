@@ -135,7 +135,7 @@
           <ul class="social-list">
             {% if profile.facebook_url %}
             <li class="social-item">
-              <a href="{{ profile.facebook_url }}" class="social-link" target="_blank">
+              <a href="{{ profile.facebook_url }}" class="social-link" target="_blank" rel="noopener">
                 <ion-icon name="logo-facebook"></ion-icon>
               </a>
             </li>
@@ -143,7 +143,7 @@
 
             {% if profile.twitter_url %}
             <li class="social-item">
-              <a href="{{ profile.twitter_url }}" class="social-link" target="_blank">
+              <a href="{{ profile.twitter_url }}" class="social-link" target="_blank" rel="noopener">
                 <ion-icon name="logo-twitter"></ion-icon>
               </a>
             </li>
@@ -151,7 +151,7 @@
 
             {% if profile.instagram_url %}
             <li class="social-item">
-              <a href="{{ profile.instagram_url }}" class="social-link" target="_blank">
+              <a href="{{ profile.instagram_url }}" class="social-link" target="_blank" rel="noopener">
                 <ion-icon name="logo-instagram"></ion-icon>
               </a>
             </li>
@@ -159,7 +159,7 @@
 
             {% if profile.linkedin_url %}
             <li class="social-item">
-              <a href="{{ profile.linkedin_url }}" class="social-link" target="_blank">
+              <a href="{{ profile.linkedin_url }}" class="social-link" target="_blank" rel="noopener">
                 <ion-icon name="logo-linkedin"></ion-icon>
               </a>
             </li>
@@ -167,7 +167,7 @@
 
             {% if profile.github_url %}
             <li class="social-item">
-              <a href="{{ profile.github_url }}" class="social-link" target="_blank">
+              <a href="{{ profile.github_url }}" class="social-link" target="_blank" rel="noopener">
                 <ion-icon name="logo-github"></ion-icon>
               </a>
             </li>
@@ -383,11 +383,12 @@
             <ul class="clients-list has-scrollbar">
               {% for client in clients %}
               <li class="clients-item">
-                <a href="{% if client.website %}{{ client.website }}{% else %}#{% endif %}" {% if client.website %}target="_blank"{% endif %}>
-                  <img
-                    src="{{ client.logo.url }}"
-                    alt="{{ client.name }} logo"
-                  />
+                <a href="{% if client.website %}{{ client.website }}{% else %}#{% endif %}" {% if client.website %}target="_blank" rel="noopener"{% endif %}>
+                  {% if client.logo %}
+                  <img src="{{ client.logo.url }}" alt="{{ client.name }} logo" />
+                  {% else %}
+                  <span class="h4">{{ client.name }}</span>
+                  {% endif %}
                 </a>
               </li>
               {% endfor %}
@@ -518,7 +519,7 @@
                 data-filter-item
                 data-category="{% if project.category %}{{ project.category.name|lower }}{% else %}other{% endif %}"
               >
-                <a href="{% if project.link %}{{ project.link }}{% else %}#{% endif %}" {% if project.link %}target="_blank"{% endif %}>
+                <a href="{% if project.link %}{{ project.link }}{% else %}#{% endif %}" {% if project.link %}target="_blank" rel="noopener"{% endif %}>
                   <figure class="project-img">
                     <div class="project-item-icon-box">
                       <ion-icon name="eye-outline"></ion-icon>
@@ -556,7 +557,7 @@
             <ul class="blog-posts-list">
               {% for blog_post in blog_posts %}
               <li class="blog-post-item">
-                <a href="#">
+                <a href="{% url 'blog_detail' slug=blog_post.slug %}">
                   <figure class="blog-banner-box">
                     {% if blog_post.featured_image %}
                     <img

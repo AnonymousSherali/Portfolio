@@ -1,8 +1,7 @@
 from rest_framework import viewsets, generics, status
-from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404, render
-from django.views.generic import TemplateView
+from django.db.models import F
+from django.views.generic import DetailView, TemplateView
 
 from .models import (
     Profile, Service, TimelineEntry, Skill,
@@ -155,10 +154,11 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
     def retrieve(self, request, *args, **kwargs):
-        # Increment view count when blog post is viewed
+        # Increment the view count atomically so concurrent reads don't clobber
+        # each other, then refresh to serialize the stored value.
         instance = self.get_object()
-        instance.view_count += 1
-        instance.save(update_fields=['view_count'])
+        BlogPost.objects.filter(pk=instance.pk).update(view_count=F('view_count') + 1)
+        instance.refresh_from_db(fields=['view_count'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -208,9 +208,14 @@ class PortfolioHomeView(TemplateView):
         # Get skills
         context['skills'] = Skill.objects.filter(is_active=True)
 
-        # Get project categories and projects
-        context['categories'] = ProjectCategory.objects.all()
-        context['projects'] = Project.objects.filter(is_active=True)
+        # Only offer categories that actually have visible projects, so the
+        # filter buttons can never point at an empty result set.
+        context['categories'] = ProjectCategory.objects.filter(
+            projects__is_active=True
+        ).distinct()
+        context['projects'] = Project.objects.filter(
+            is_active=True
+        ).select_related('category')
 
         # Get testimonials
         context['testimonials'] = Testimonial.objects.filter(is_active=True)
@@ -221,4 +226,30 @@ class PortfolioHomeView(TemplateView):
         # Get blog posts
         context['blog_posts'] = BlogPost.objects.filter(is_published=True)[:6]
 
+        return context
+
+
+class BlogPostDetailView(DetailView):
+    """Full page for a single blog post."""
+    model = BlogPost
+    template_name = 'portfolio/blog_detail.html'
+    context_object_name = 'post'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        return BlogPost.objects.filter(is_published=True)
+
+    def get_object(self, queryset=None):
+        post = super().get_object(queryset)
+        BlogPost.objects.filter(pk=post.pk).update(view_count=F('view_count') + 1)
+        post.refresh_from_db(fields=['view_count'])
+        return post
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = Profile.objects.first()
+        context['related_posts'] = BlogPost.objects.filter(
+            is_published=True
+        ).exclude(pk=self.object.pk)[:3]
         return context

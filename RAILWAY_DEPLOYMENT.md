@@ -1,202 +1,111 @@
-# Railway Deployment Guide - Portfolio Project
+# Railway Deployment Guide
 
-## 🚀 Quick Setup
+## 1. Attach a PostgreSQL database (required)
 
-### Step 1: Set Environment Variables in Railway
+Railway containers have an **ephemeral filesystem** — the SQLite file is
+recreated on every deploy, so everything entered in the admin (profile,
+projects, blog posts, even the superuser) disappears on the next push.
 
-Railway Dashboard → Settings → Variables → Add the following:
+In the Railway dashboard: **New → Database → Add PostgreSQL**.
 
-**REQUIRED (Xavfsizlik uchun muhim):**
+Railway injects `DATABASE_URL` automatically and the app picks it up. No code
+changes needed. Without it the app falls back to SQLite, which is fine locally
+but loses data on Railway.
+
+## 2. Set environment variables
+
+**Settings → Variables → Raw Editor:**
+
 ```env
-SECRET_KEY=<generate-random-key>
+SECRET_KEY=<paste a 50+ character random key>
 DEBUG=False
-```
-
-**OPTIONAL (Superuser uchun - tavsiya etiladi):**
-```env
 DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_EMAIL=admin@example.com
-DJANGO_SUPERUSER_PASSWORD=YourStrongPassword123!
+DJANGO_SUPERUSER_EMAIL=you@example.com
+DJANGO_SUPERUSER_PASSWORD=<a strong password>
 ```
 
-### Generate SECRET_KEY
+Generate a secret key:
 
-Terminal'da quyidagi commandni ishga tushiring:
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-Natijani Railway'dagi `SECRET_KEY` variable'ga joylashtiring.
+If `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` are missing, the
+start-up script skips superuser creation and logs a warning — no account with a
+guessable default password is ever created on a public site.
 
----
+### Optional variables
 
-## 📋 Deployment Process
+| Variable | Default | Purpose |
+|---|---|---|
+| `ALLOWED_HOSTS` | `.railway.app,localhost,127.0.0.1` | Comma-separated extra hosts |
+| `CSRF_TRUSTED_ORIGINS` | `https://*.railway.app` | Comma-separated origins |
+| `CORS_ALLOWED_ORIGINS` | *(empty)* | Extra exact origins for the API |
+| `MEDIA_ROOT` | `<project>/media` | Point at a mounted volume to keep uploads |
+| `WEB_CONCURRENCY` | `2` | Gunicorn worker count |
+| `SECURE_SSL_REDIRECT` | `True` | Set `False` only if terminating TLS elsewhere |
+| `LOG_LEVEL` | `INFO` | Root log level |
+| `TIME_ZONE` | `UTC` | e.g. `Asia/Tashkent` |
 
-Railway avtomatik quyidagilarni bajaradi:
+## 3. Deployment lifecycle
 
-1. **Install dependencies:** `pip install -r requirements.txt`
-2. **Collect static files:** `python manage.py collectstatic --noinput`
-3. **Run migrations:** `python manage.py migrate`
-4. **Create superuser:** `python manage.py create_default_superuser` (agar environment variables o'rnatilgan bo'lsa)
-5. **Start server:** `gunicorn config.wsgi`
+| Phase | Command | What runs |
+|---|---|---|
+| Build | `./build.sh` | `collectstatic` only |
+| Start | `./release.sh` | `migrate` → `create_default_superuser` → `gunicorn` |
 
----
+Migrations run at **start-up**, not build time, so they are applied to the live
+PostgreSQL service rather than a throwaway build container. Both commands are
+idempotent and safe to repeat on every restart.
 
-## ✅ Deployment Success Check
+Healthcheck path is `/health/`, which returns JSON without touching the
+database or rendering a template.
 
-### 1. Railway Logs tekshirish:
-Railway Dashboard → Deployments → Latest Deployment → View Logs
+## 4. Uploaded images
 
-**Quyidagilarni topish kerak:**
-```
-✓ Migrations completed
-✓ Successfully created superuser "admin"
-✓ Static files collected
-✓ Gunicorn started
-```
+`MEDIA_ROOT` also lives on the ephemeral filesystem. Pick one:
 
-### 2. Admin Panel tekshirish:
-```
-https://portfolio-production-f3aa.up.railway.app/admin/login/
-```
+- **Railway volume** — mount one and set `MEDIA_ROOT` to its path.
+- **Cloud storage** — add `django-storages` with S3 or Cloudinary.
+- **Do nothing** — re-upload images after each deploy (fine while iterating).
 
-**Kirish uchun:**
-- Username: `DJANGO_SUPERUSER_USERNAME` (default: admin)
-- Password: `DJANGO_SUPERUSER_PASSWORD` (default: admin123)
+The site renders correctly either way: every template guards missing images
+with `{% if %}` and falls back to a bundled placeholder.
 
----
+## 5. After the first successful deploy
 
-## 🔧 Troubleshooting
+1. Open `https://<your-domain>/admin/` and sign in.
+2. Fill in **Profile** first — the sidebar, About and Contact sections read from it.
+3. Add Services, Timeline entries, Skills, Project categories, Projects,
+   Testimonials, Clients and Blog posts as needed.
+4. Empty sections simply render empty; nothing breaks if you skip one.
 
-### ❌ Agar admin panelga kira olmasangiz:
+## Local development
 
-**1. Railway Logs'ni tekshiring:**
-```
-Railway Dashboard → Deployments → View Logs
-```
-
-**2. Environment Variables tekshiring:**
-```
-Railway Dashboard → Settings → Variables
-```
-Quyidagilar mavjudligini tekshiring:
-- ✅ SECRET_KEY
-- ✅ DJANGO_SUPERUSER_USERNAME
-- ✅ DJANGO_SUPERUSER_PASSWORD
-- ✅ DJANGO_SUPERUSER_EMAIL
-
-**3. Agar superuser yaratilmagan bo'lsa:**
-
-Railway Console orqali:
 ```bash
-python manage.py create_default_superuser
-```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-Yoki interaktiv:
-```bash
+export DEBUG=True
+python manage.py migrate
 python manage.py createsuperuser
+python manage.py runserver
 ```
 
-**4. Agar static fayllar yuklanmasa:**
+Run the test suite:
+
 ```bash
-python manage.py collectstatic --noinput
+DEBUG=True python manage.py test portfolio
 ```
 
-**5. Railway'ni qayta deploy qiling:**
-```
-Railway Dashboard → Deployments → Redeploy
-```
+## Troubleshooting
 
----
-
-## 📝 Post-Deployment: Portfolio Data qo'shish
-
-Admin panelga kirganingizdan keyin quyidagi ma'lumotlarni to'ldiring:
-
-### 1. Profile (Shaxsiy ma'lumotlar)
-- ✏️ Name, Title, Bio
-- ✏️ Email, Phone, Birthday, Location
-- ✏️ Avatar image
-- ✏️ Social media links (Facebook, Twitter, Instagram, LinkedIn, GitHub)
-
-### 2. Services (Xizmatlar)
-- ✏️ Service name
-- ✏️ Description
-- ✏️ Icon/Image
-
-### 3. Timeline Entries (Ta'lim va Ish Tajribasi)
-- ✏️ Education entries (Type: Education)
-- ✏️ Experience entries (Type: Experience)
-- ✏️ Institution, Title, Description, Dates
-
-### 4. Skills (Ko'nikmalar)
-- ✏️ Skill name
-- ✏️ Proficiency percentage (0-100)
-- ✏️ Category
-
-### 5. Project Categories
-- ✏️ Category name (Web Design, Applications, etc.)
-
-### 6. Projects
-- ✏️ Title, Description
-- ✏️ Project image
-- ✏️ Category selection
-- ✏️ Live URL, GitHub URL
-- ✏️ Technologies used
-
-### 7. Testimonials (Mijozlar fikrlari)
-- ✏️ Client name
-- ✏️ Client avatar
-- ✏️ Testimonial content
-
-### 8. Clients (Mijozlar logotipi)
-- ✏️ Client name
-- ✏️ Logo image
-- ✏️ Website URL
-
-### 9. Blog Posts
-- ✏️ Title, Content, Excerpt
-- ✏️ Featured image
-- ✏️ Category, Published date
-
----
-
-## ⚠️ Important Notes
-
-### Media Files (Rasmlar)
-Railway ephemeral filesystem ishlatadi - server restart bo'lsa rasmlar yo'qoladi.
-
-**Yechim:** Cloud storage ishlatish
-- Cloudinary (Free tier: 25GB)
-- AWS S3
-- Railway Volumes
-
-### Database
-Hozirda SQLite ishlatilmoqda. Production uchun PostgreSQL tavsiya etiladi.
-
-**Railway PostgreSQL qo'shish:**
-1. Railway Dashboard → New → Database → PostgreSQL
-2. Environment variables avtomatik qo'shiladi
-3. settings.py'ni PostgreSQL uchun sozlang
-
----
-
-## 🎯 Final Checklist
-
-- ✅ Railway environment variables o'rnatilgan
-- ✅ Deployment successful (logs'da xatolik yo'q)
-- ✅ Admin panelga kirildi
-- ✅ Superuser yaratilgan
-- ✅ Static files ishlayapti (CSS/JS yuklanmoqda)
-- ✅ Portfolio ma'lumotlari qo'shilgan
-- ✅ Frontend sahifa to'g'ri ko'rsatilmoqda
-
----
-
-## 📞 Support
-
-Muammo bo'lsa:
-1. Railway logs'ni tekshiring
-2. Browser console (F12) xatolarni tekshiring
-3. Environment variables to'g'riligini tasdiqlang
-4. Redeploy qilib ko'ring
+| Symptom | Cause | Fix |
+|---|---|---|
+| Admin data vanishes after a deploy | No PostgreSQL attached | Step 1 |
+| Cannot log in to admin | Superuser env vars not set | Step 2, then redeploy |
+| `DisallowedHost` error | Custom domain | Add it to `ALLOWED_HOSTS` |
+| CSRF failure on the admin login form | Custom domain | Add `https://<domain>` to `CSRF_TRUSTED_ORIGINS` |
+| Healthcheck fails | App crashed on start | Read the deploy logs — `release.sh` echoes each step |
+| Images 404 | Uploads wiped by a deploy | See step 4 |

@@ -1,0 +1,104 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ post.title }} — {{ profile.name|default:"Portfolio" }}</title>
+    <meta name="description" content="{{ post.excerpt|striptags|truncatewords:30 }}" />
+
+    <link rel="shortcut icon" href="{% static 'portfolio/images/logo.ico' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      .blog-detail-wrapper { max-width: 900px; margin: 0 auto; padding: 30px 15px 60px; }
+      .blog-detail-banner img { width: 100%; border-radius: 16px; margin-bottom: 25px; }
+      .blog-detail-body { color: var(--light-gray, #d6d6d6); line-height: 1.8; font-size: var(--fs-6, 14px); }
+      .blog-detail-body p { margin-bottom: 15px; }
+      .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 25px; color: var(--orange-yellow-crayola, #ffdb70); text-decoration: none; }
+      .back-link:hover { text-decoration: underline; }
+      .related-list { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 20px; }
+      .related-list a { color: inherit; text-decoration: none; }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <div class="main-content">
+        <article class="blog active" data-page="blog-detail">
+          <div class="blog-detail-wrapper">
+            <a href="{% url 'home' %}" class="back-link">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+              <span>Back to portfolio</span>
+            </a>
+
+            <header>
+              <h2 class="h2 article-title">{{ post.title }}</h2>
+
+              <div class="blog-meta">
+                <p class="blog-category">{{ post.category }}</p>
+                <span class="dot"></span>
+                <time datetime="{{ post.published_date|date:'Y-m-d' }}">
+                  {{ post.published_date|date:'M d, Y' }}
+                </time>
+                <span class="dot"></span>
+                <span>{{ post.view_count }} view{{ post.view_count|pluralize }}</span>
+              </div>
+            </header>
+
+            {% if post.featured_image %}
+            <figure class="blog-detail-banner">
+              <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" />
+            </figure>
+            {% endif %}
+
+            <section class="blog-detail-body">
+              {{ post.content|linebreaks }}
+            </section>
+
+            {% if related_posts %}
+            <section class="blog-posts" style="margin-top: 45px;">
+              <h3 class="h3">More posts</h3>
+
+              <ul class="related-list">
+                {% for related in related_posts %}
+                <li class="blog-post-item" style="min-width: 0;">
+                  <a href="{% url 'blog_detail' slug=related.slug %}">
+                    {% if related.featured_image %}
+                    <figure class="blog-banner-box">
+                      <img src="{{ related.featured_image.url }}" alt="{{ related.title }}" loading="lazy" />
+                    </figure>
+                    {% endif %}
+
+                    <div class="blog-content">
+                      <div class="blog-meta">
+                        <p class="blog-category">{{ related.category }}</p>
+                        <span class="dot"></span>
+                        <time datetime="{{ related.published_date|date:'Y-m-d' }}">
+                          {{ related.published_date|date:'M d, Y' }}
+                        </time>
+                      </div>
+                      <h3 class="h3 blog-item-title">{{ related.title }}</h3>
+                    </div>
+                  </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </section>
+            {% endif %}
+          </div>
+        </article>
+      </div>
+    </main>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  </body>
+</html>
