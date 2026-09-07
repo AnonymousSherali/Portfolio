@@ -1,38 +1,38 @@
 """
-Management command to create a default superuser from environment variables.
-This is useful for Railway deployment where we can't run interactive commands.
+Create a superuser from environment variables.
+
+Railway can't run `createsuperuser` interactively, so this command is invoked
+on start-up. It is a no-op when the user already exists, which makes it safe to
+run on every restart.
 """
+
 import os
-from django.core.management.base import BaseCommand
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Creates a superuser from environment variables if not exists'
+    help = 'Create a superuser from DJANGO_SUPERUSER_* environment variables if none exists'
 
     def handle(self, *args, **options):
         User = get_user_model()
 
-        username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-        email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
-        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+        username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+        email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
+        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
 
-        if User.objects.filter(username=username).exists():
-            self.stdout.write(
-                self.style.WARNING(f'Superuser "{username}" already exists. Skipping.')
-            )
+        if not username or not password:
+            self.stdout.write(self.style.WARNING(
+                'DJANGO_SUPERUSER_USERNAME / DJANGO_SUPERUSER_PASSWORD are not set — '
+                'skipping superuser creation. Set them in the Railway variables, or run '
+                '`python manage.py createsuperuser` manually.'
+            ))
             return
 
-        try:
-            User.objects.create_superuser(
-                username=username,
-                email=email,
-                password=password
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f'Successfully created superuser "{username}"')
-            )
-        except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f'Error creating superuser: {str(e)}')
-            )
+        if User.objects.filter(username=username).exists():
+            self.stdout.write(self.style.SUCCESS(f'Superuser "{username}" already exists.'))
+            return
+
+        User.objects.create_superuser(username=username, email=email, password=password)
+        self.stdout.write(self.style.SUCCESS(f'Created superuser "{username}".'))

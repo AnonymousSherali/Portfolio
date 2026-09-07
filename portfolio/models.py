@@ -1,5 +1,21 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
+
+
+def unique_slug(value, model_class, instance_pk=None):
+    """Slugify `value`, appending -2, -3, ... until it is unique for the model."""
+    base = slugify(value) or 'item'
+    slug = base
+    counter = 2
+    queryset = model_class.objects.all()
+    if instance_pk is not None:
+        queryset = queryset.exclude(pk=instance_pk)
+    while queryset.filter(slug=slug).exists():
+        slug = f'{base}-{counter}'
+        counter += 1
+    return slug
 
 
 class Profile(models.Model):
@@ -25,7 +41,7 @@ class Profile(models.Model):
 
     class Meta:
         verbose_name = 'Profile'
-        verbose_name_plural = 'Profile'
+        verbose_name_plural = 'Profiles'
 
     def __str__(self):
         return self.name
@@ -86,8 +102,9 @@ class TimelineEntry(models.Model):
 class Skill(models.Model):
     """Skills with proficiency levels"""
     name = models.CharField(max_length=100)
-    proficiency = models.IntegerField(
+    proficiency = models.PositiveIntegerField(
         default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text='Proficiency percentage (0-100)'
     )
     category = models.CharField(max_length=100, blank=True)
@@ -125,7 +142,7 @@ class ProjectCategory(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = unique_slug(self.name, ProjectCategory, self.pk)
         super().save(*args, **kwargs)
 
 
@@ -184,7 +201,7 @@ class Testimonial(models.Model):
 class Client(models.Model):
     """Client logos"""
     name = models.CharField(max_length=100)
-    logo = models.ImageField(upload_to='clients/')
+    logo = models.ImageField(upload_to='clients/', blank=True, null=True)
     website = models.URLField(blank=True)
     order = models.IntegerField(default=0, help_text='Display order')
     is_active = models.BooleanField(default=True)
@@ -210,10 +227,9 @@ class BlogPost(models.Model):
     featured_image = models.ImageField(upload_to='blog/', blank=True, null=True)
     category = models.CharField(max_length=100, default='Design')
     published_date = models.DateField()
-    updated_date = models.DateField(auto_now=True)
     featured = models.BooleanField(default=False)
     is_published = models.BooleanField(default=True)
-    view_count = models.IntegerField(default=0)
+    view_count = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -226,9 +242,12 @@ class BlogPost(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('blog_detail', kwargs={'slug': self.slug})
+
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = unique_slug(self.title, BlogPost, self.pk)
         super().save(*args, **kwargs)
 
 
