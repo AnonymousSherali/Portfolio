@@ -102,6 +102,17 @@ DATABASES = {
 }
 
 
+# Cache. Gunicorn runs several worker processes, and the default per-process
+# LocMemCache would give each one its own throttle counters, so the contact
+# form limit is kept in the database where every worker sees the same count.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+    }
+}
+
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -158,6 +169,13 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    # Railway's edge proxy appends the real client IP to X-Forwarded-For;
+    # without this every visitor would share one throttle bucket.
+    'NUM_PROXIES': int(os.environ.get('NUM_PROXIES', 0 if DEBUG else 1)),
+    # Only views that opt in with throttle_scope are limited (the contact form).
+    'DEFAULT_THROTTLE_RATES': {
+        'contact': os.environ.get('CONTACT_THROTTLE_RATE', '5/hour'),
+    },
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
@@ -186,6 +204,10 @@ if RAILWAY_DOMAIN:
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
+    # Railway's healthcheck calls the container over plain HTTP without an
+    # X-Forwarded-Proto header and requires a 200, so a 301 to https would
+    # fail every deploy. Paths here are matched without the leading slash.
+    SECURE_REDIRECT_EXEMPT = [r'^health/$']
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 31536000))
