@@ -1,5 +1,6 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from django.db.models import F
 from django.views.generic import DetailView, TemplateView
 
@@ -170,6 +171,8 @@ class ContactMessageCreateView(generics.CreateAPIView):
     """
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'contact'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

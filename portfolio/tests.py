@@ -1,8 +1,11 @@
 """Smoke tests covering the pages and API endpoints the site depends on."""
 
 from datetime import date
+from unittest.mock import patch
 
-from django.test import TestCase
+from django.core.cache import cache
+from django.test import TestCase, override_settings
+from rest_framework.throttling import ScopedRateThrottle
 from django.urls import reverse
 
 from .models import (
@@ -88,6 +91,9 @@ class BlogDetailTests(TestCase):
 
 
 class ContactApiTests(TestCase):
+    def setUp(self):
+        cache.clear()  # throttle counters live in the cache
+
     def test_form_submission_creates_message(self):
         response = self.client.post(reverse('contact'), {
             'full_name': 'Ali Valiyev',
@@ -113,3 +119,68 @@ class ApiEndpointTests(TestCase):
             with self.subTest(endpoint=name):
                 response = self.client.get(reverse(f'{name}-list'))
                 self.assertEqual(response.status_code, 200)
+
+
+class ProductionSecurityTests(TestCase):
+    """Railway calls /health/ over plain HTTP and needs a 200, not a redirect."""
+
+    @override_settings(SECURE_SSL_REDIRECT=True, SECURE_REDIRECT_EXEMPT=[r'^health/$'])
+    def test_healthcheck_is_not_redirected_to_https(self):
+        response = self.client.get('/health/')
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(SECURE_SSL_REDIRECT=True, SECURE_REDIRECT_EXEMPT=[r'^health/$'])
+    def test_other_pages_are_redirected_to_https(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 301)
+        self.assertTrue(response['Location'].startswith('https://'))
+
+
+class ContactThrottleTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_contact_form_is_rate_limited(self):
+        payload = {'full_name': 'Ali', 'email': 'ali@example.com', 'message': 'Salom'}
+        rates = {'contact': '2/hour'}
+        with patch.object(ScopedRateThrottle, 'THROTTLE_RATES', rates):
+            codes = [self.client.post(reverse('contact'), payload).status_code for _ in range(3)]
+        self.assertEqual(codes, [201, 201, 429])
+        self.assertEqual(ContactMessage.objects.count(), 2)
+
+
+class TemplateContentTests(TestCase):
+    def test_map_follows_profile_location(self):
+        Profile.objects.create(
+            name='Sherali', title='Developer', bio='Hi', email='a@b.uz',
+            phone='1', birthday=date(2000, 1, 1), location='Tashkent, Uzbekistan',
+        )
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'maps?q=Tashkent%2C%20Uzbekistan')
+        self.assertNotContains(response, 'Sacramento')
+        self.assertContains(response, '<title>Sherali — Developer</title>', html=False)
+
+    def test_empty_sections_are_hidden(self):
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'class="h3 testimonials-title"')
+        self.assertNotContains(response, 'class="h3 clients-title"')
+        self.assertNotContains(response, 'data-mapbox')
+
+    def test_testimonial_date_reaches_modal(self):
+        Testimonial.objects.create(client_name='Ali', content='Zo\'r', date=date(2024, 3, 5))
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'data-testimonials-date="2024-03-05"')
+        self.assertNotContains(response, '14 June, 2021')
+
+    def test_filter_buttons_carry_category_key(self):
+        category = ProjectCategory.objects.create(name='Web Design')
+        Project.objects.create(
+            title='P', description='d', category=category,
+            technologies='x', created_date=date(2024, 1, 1),
+        )
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'data-filter-value="web design"')
+        self.assertContains(response, 'data-category="web design"')

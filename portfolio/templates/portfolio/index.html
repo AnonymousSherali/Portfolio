@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sherali Toshniyozov</title>
+    <title>{{ profile.name|default:"Sherali Toshniyozov" }}{% if profile.title %} — {{ profile.title }}{% endif %}</title>
+    <meta name="description" content="{% if profile.bio %}{{ profile.bio|striptags|truncatewords:30 }}{% else %}{{ profile.name|default:"Sherali Toshniyozov" }} — portfolio{% endif %}" />
 
     <!--
     - favicon
@@ -292,13 +293,19 @@
           - testimonials
         -->
 
+          {% if testimonials %}
           <section class="testimonials">
             <h3 class="h3 testimonials-title">Testimonials</h3>
 
             <ul class="testimonials-list has-scrollbar">
               {% for testimonial in testimonials %}
               <li class="testimonials-item">
-                <div class="content-card" data-testimonials-item>
+                <div
+                  class="content-card"
+                  data-testimonials-item
+                  data-testimonials-date="{{ testimonial.date|date:'Y-m-d' }}"
+                  data-testimonials-date-label="{{ testimonial.date|date:'j F, Y' }}"
+                >
                   <figure class="testimonials-avatar-box">
                     <img
                       src="{% if testimonial.client_avatar %}{{ testimonial.client_avatar.url }}{% else %}{% static 'portfolio/images/avatar-1.png' %}{% endif %}"
@@ -325,9 +332,10 @@
               {% endfor %}
             </ul>
           </section>
+          {% endif %}
 
           <!--
-          - testimonials modal
+          - testimonials modal (filled in by script.js from the clicked card)
         -->
 
           <div class="modal-container" data-modal-container>
@@ -342,7 +350,7 @@
                 <figure class="modal-avatar-box">
                   <img
                     src="{% static 'portfolio/images/avatar-1.png' %}"
-                    alt="Daniel lewis"
+                    alt=""
                     width="80"
                     data-modal-img
                   />
@@ -355,20 +363,11 @@
               </div>
 
               <div class="modal-content">
-                <h4 class="h3 modal-title" data-modal-title>Daniel lewis</h4>
+                <h4 class="h3 modal-title" data-modal-title></h4>
 
-                <time datetime="2021-06-14">14 June, 2021</time>
+                <time datetime="" data-modal-date></time>
 
-                <div data-modal-text>
-                  <p>
-                    Richard was hired to create a corporate identity. We were
-                    very pleased with the work done. She has a lot of experience
-                    and is very concerned about the needs of client. Lorem ipsum
-                    dolor sit amet, ullamcous cididt consectetur adipiscing
-                    elit, seds do et eiusmod tempor incididunt ut laborels
-                    dolore magnarels alia.
-                  </p>
-                </div>
+                <div data-modal-text></div>
               </div>
             </section>
           </div>
@@ -377,6 +376,7 @@
           - clients
         -->
 
+          {% if clients %}
           <section class="clients">
             <h3 class="h3 clients-title">Clients</h3>
 
@@ -394,6 +394,7 @@
               {% endfor %}
             </ul>
           </section>
+          {% endif %}
         </article>
 
         <!--
@@ -478,12 +479,12 @@
           <section class="projects">
             <ul class="filter-list">
               <li class="filter-item">
-                <button class="active" data-filter-btn>All</button>
+                <button class="active" data-filter-btn data-filter-value="all">All</button>
               </li>
 
               {% for category in categories %}
               <li class="filter-item">
-                <button data-filter-btn>{{ category.name }}</button>
+                <button data-filter-btn data-filter-value="{{ category.name|lower }}">{{ category.name }}</button>
               </li>
               {% endfor %}
             </ul>
@@ -501,12 +502,12 @@
 
               <ul class="select-list">
                 <li class="select-item">
-                  <button data-select-item>All</button>
+                  <button data-select-item data-filter-value="all">All</button>
                 </li>
 
                 {% for category in categories %}
                 <li class="select-item">
-                  <button data-select-item>{{ category.name }}</button>
+                  <button data-select-item data-filter-value="{{ category.name|lower }}">{{ category.name }}</button>
                 </li>
                 {% endfor %}
               </ul>
@@ -601,16 +602,20 @@
             <h2 class="h2 article-title">Contact</h2>
           </header>
 
+          {% if profile.location %}
           <section class="mapbox" data-mapbox>
             <figure>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d199666.5651251294!2d-121.58334177520186!3d38.56165006739519!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809ac672b28397f9%3A0x921f6aaa74197fdb!2sSacramento%2C%20CA%2C%20USA!5e0!3m2!1sen!2sbd!4v1647608789441!5m2!1sen!2sbd"
+                src="https://maps.google.com/maps?q={{ profile.location|urlencode }}&amp;z=12&amp;output=embed"
                 width="400"
                 height="300"
                 loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Map of {{ profile.location }}"
               ></iframe>
             </figure>
           </section>
+          {% endif %}
 
           <section class="contact-form">
             <h3 class="h3 form-title">Contact Form</h3>
@@ -708,11 +713,14 @@
             .catch(error => {
               formMessage.style.display = 'block';
               formMessage.style.color = '#f44336';
-              formMessage.textContent = 'Sorry, there was an error sending your message. Please try again.';
+              formMessage.textContent = (error && error.detail && /throttled/i.test(error.detail))
+                ? 'Too many messages sent. Please try again later.'
+                : 'Sorry, there was an error sending your message. Please try again.';
               console.error('Error:', error);
             })
             .finally(() => {
-              submitBtn.disabled = false;
+              // Re-enable only if the (possibly just reset) form is still valid.
+              submitBtn.disabled = !contactForm.checkValidity();
               btnText.textContent = originalText;
             });
           });

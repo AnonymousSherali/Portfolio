@@ -9,6 +9,7 @@ set -e
 
 echo "====== Running migrations ======"
 python manage.py migrate --noinput
+python manage.py createcachetable
 
 echo "====== Ensuring superuser exists ======"
 python manage.py create_default_superuser

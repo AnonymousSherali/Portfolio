@@ -46,20 +46,23 @@ guessable default password is ever created on a public site.
 | `SECURE_SSL_REDIRECT` | `True` | Set `False` only if terminating TLS elsewhere |
 | `LOG_LEVEL` | `INFO` | Root log level |
 | `TIME_ZONE` | `UTC` | e.g. `Asia/Tashkent` |
+| `CONTACT_THROTTLE_RATE` | `5/hour` | Contact form submissions per visitor IP |
+| `NUM_PROXIES` | `1` | Proxies in front of the app; used to find the real client IP |
 
 ## 3. Deployment lifecycle
 
 | Phase | Command | What runs |
 |---|---|---|
 | Build | `./build.sh` | `collectstatic` only |
-| Start | `./release.sh` | `migrate` → `create_default_superuser` → `gunicorn` |
+| Start | `./release.sh` | `migrate` → `createcachetable` → `create_default_superuser` → `gunicorn` |
 
 Migrations run at **start-up**, not build time, so they are applied to the live
 PostgreSQL service rather than a throwaway build container. Both commands are
 idempotent and safe to repeat on every restart.
 
 Healthcheck path is `/health/`, which returns JSON without touching the
-database or rendering a template.
+database or rendering a template. It is exempt from the HTTPS redirect:
+Railway probes it over plain HTTP and fails the deploy on anything but a 200.
 
 ## 4. Uploaded images
 

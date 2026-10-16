@@ -136,6 +136,17 @@ class ContactMessageAdmin(admin.ModelAdmin):
     ordering = ['-submitted_date']
     date_hierarchy = 'submitted_date'
     readonly_fields = ['full_name', 'email', 'message', 'submitted_date']
+    actions = ['mark_as_read', 'mark_as_unread']
+
+    @admin.action(description='Mark selected messages as read')
+    def mark_as_read(self, request, queryset):
+        updated = queryset.update(is_read=True)
+        self.message_user(request, f'{updated} message(s) marked as read.')
+
+    @admin.action(description='Mark selected messages as unread')
+    def mark_as_unread(self, request, queryset):
+        updated = queryset.update(is_read=False)
+        self.message_user(request, f'{updated} message(s) marked as unread.')
 
     def has_add_permission(self, request):
         # Contact messages should only come from the API
